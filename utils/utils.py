@@ -7,11 +7,43 @@
 
 # %% Import packages
 import os
-import numpy as np
 import math
 import random
 
+import numpy as np
+import point_cloud_utils as pcu
+import torch
+from pytorch3d.structures import Pointclouds
+
 random.seed = 42
+
+def sample_pcd(mesh, target_num_pts):
+    """"""
+    verts, faces = mesh
+    verts = np.array(verts)
+    faces = np.array(faces)
+
+    normals = pcu.estimate_mesh_vertex_normals(verts, faces)
+    fid, bc = pcu.sample_mesh_poisson_disk(
+        verts, faces, num_samples=target_num_pts
+    )
+    rand_positions = pcu.interpolate_barycentric_coords(faces, fid, bc, verts)
+    number_of_points = rand_positions.shape[0]
+    if number_of_points == target_num_pts:
+        return rand_positions
+    elif number_of_points < target_num_pts:
+        offset = target_num_pts - number_of_points
+        idx = np.arange(number_of_points)
+        idx = np.concatenate([idx, np.random.randint(number_of_points, size=offset)])
+        return rand_positions[idx]
+    else:
+        rand_normals = pcu.interpolate_barycentric_coords(faces, fid, bc, normals)
+        pcd = Pointclouds(
+            points=[torch.from_numpy(rand_positions)],
+            normals=[torch.from_numpy(rand_normals)],
+        )
+        pcd = pcd.subsample(target_num_pts)
+        return np.array(pcd.points_list()[0])
 
 def get_classes(configs: dict) -> dict:
 
@@ -119,40 +151,42 @@ class PointSampler(object):
 
         """
 
-        verts, faces = mesh
-        verts = np.array(verts)
-        areas = np.zeros((len(faces)))
+        # verts, faces = mesh
+        # verts = np.array(verts)
+        # areas = np.zeros((len(faces)))
 
-        for i in range(len(areas)):
-            areas[i] = (
-                self.triangle_area(
-                    verts[faces[i][0]],
-                    verts[faces[i][1]],
-                    verts[faces[i][2]]
-                )
-            )
+        # for i in range(len(areas)):
+        #     areas[i] = (
+        #         self.triangle_area(
+        #             verts[faces[i][0]],
+        #             verts[faces[i][1]],
+        #             verts[faces[i][2]]
+        #         )
+        #     )
 
-        sampled_faces = (
-            random.choices(
-                faces,
-                weights=areas,
-                cum_weights=None,
-                k=self.output_size
-            )
-        )
+        # sampled_faces = (
+        #     random.choices(
+        #         faces,
+        #         weights=areas,
+        #         cum_weights=None,
+        #         k=self.output_size
+        #     )
+        # )
 
-        sampled_points = np.zeros((self.output_size, 3))
+        # sampled_points = np.zeros((self.output_size, 3))
 
-        for i in range(len(sampled_faces)):
-            sampled_points[i] = (
-                self.sample_point(
-                    verts[sampled_faces[i][0]],
-                    verts[sampled_faces[i][1]],
-                    verts[sampled_faces[i][2]]
-                )
-            )
+        # for i in range(len(sampled_faces)):
+        #     sampled_points[i] = (
+        #         self.sample_point(
+        #             verts[sampled_faces[i][0]],
+        #             verts[sampled_faces[i][1]],
+        #             verts[sampled_faces[i][2]]
+        #         )
+        #     )
 
-        return sampled_points
+        # return sampled_points
+        return sample_pcd(mesh, self.output_size)
+
 
 
 class Normalize(object):
