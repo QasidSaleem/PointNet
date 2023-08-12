@@ -45,14 +45,14 @@ data:
     test_dir: test
     sample_data_viz: sofa/test/sofa_0681.off
 
-computing_device: cpu
+computing_device: cuda
 
 data_pipeline:
-    num_workers: 0
+    num_workers: 2
     pin_memory: True
 
 train:
-    from: checkpoint
+    from: scratch
     pretrained_model: ./pretrained/pretrained-modelnet10.pth
     num_epochs: 10
     batch_size: 32
