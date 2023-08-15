@@ -17,10 +17,33 @@ from pytorch3d.structures import Pointclouds
 
 random.seed = 42
 
+
+def normalize_mesh(vertices):
+
+    x_max = np.max(vertices[:, 0])
+    y_max = np.max(vertices[:, 1])
+    z_max = np.max(vertices[:, 2])
+    x_min = np.min(vertices[:, 0])
+    y_min = np.min(vertices[:, 1])
+    z_min = np.min(vertices[:, 2])
+    x_mid = (x_max + x_min) / 2
+    y_mid = (y_max + y_min) / 2
+    z_mid = (z_max + z_min) / 2
+    x_scale = x_max - x_min
+    y_scale = y_max - y_min
+    z_scale = z_max - z_min
+    scale = np.sqrt(x_scale * x_scale + y_scale * y_scale + z_scale * z_scale)
+    vertices[:, 0] = (vertices[:, 0] - x_mid) / scale
+    vertices[:, 1] = (vertices[:, 1] - y_mid) / scale
+    vertices[:, 2] = (vertices[:, 2] - z_mid) / scale
+
+    return vertices
+
 def sample_pcd(mesh, target_num_pts):
     """"""
     verts, faces = mesh
     verts = np.array(verts)
+    verts = normalize_mesh(verts)
     faces = np.array(faces)
 
     normals = pcu.estimate_mesh_vertex_normals(verts, faces)
@@ -44,6 +67,8 @@ def sample_pcd(mesh, target_num_pts):
         )
         pcd = pcd.subsample(target_num_pts)
         return np.array(pcd.points_list()[0])
+
+
 
 def get_classes(configs: dict) -> dict:
 

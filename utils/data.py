@@ -127,7 +127,7 @@ def get_dataset(
         train_transforms = transforms.Compose(
             [
                 PointSampler(1024),
-                Normalize(),
+                # Normalize(),
                 RandRotation_z(),
                 RandomNoise(),
                 ToTensor()
@@ -142,7 +142,7 @@ def get_dataset(
         valid_transforms = transforms.Compose(
             [
                 PointSampler(1024),
-                Normalize(),
+                # Normalize(),
                 ToTensor()
             ]
         )
@@ -155,7 +155,7 @@ def get_dataset(
         test_transforms = transforms.Compose(
             [
                 PointSampler(1024),
-                Normalize(),
+                # Normalize(),
                 ToTensor()
             ]
         )
@@ -237,7 +237,7 @@ def get_single_data(file: str) -> PointCloudData:
     test_transforms = transforms.Compose(
         [
             PointSampler(1024),
-            Normalize(),
+            # Normalize(),
             ToTensor()
         ]
     )
