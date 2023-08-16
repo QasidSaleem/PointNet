@@ -48,7 +48,7 @@ data:
 computing_device: cuda
 
 data_pipeline:
-    num_workers: 2
+    num_workers: 0
     pin_memory: True
 
 train:
